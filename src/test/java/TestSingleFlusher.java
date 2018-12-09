@@ -1,25 +1,26 @@
+import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.sun.tools.javac.util.Assert;
-import com.sun.tools.javac.util.FatalError;
+import com.lmax.disruptor.RingBuffer;
+import org.junit.Assert;
 import org.junit.Test;
-import org.vitoliu.disruptor.concurrent.async.Flusher;
+import org.vitoliu.disruptor.concurrent.async.SingleFlusher;
 
 /**
  *
- * {@link org.vitoliu.disruptor.concurrent.async.Flusher 测试}
+ * {@link SingleFlusher 测试}
  * @author vito.liu
  * @since 09 十二月 2018
  */
-public class TestFlusher {
+public class TestSingleFlusher {
 
 
 	@Test
 	public void test1() throws Exception {
 		final AtomicInteger value = new AtomicInteger();
-		Flusher.Builder<Integer> builder = new Flusher.Builder<Integer>().setBufferSize(1024).setNotifySize(128).setNamePrefix("test");
-		Flusher.EventListener[] groupOne = new Flusher.EventListener[1];
-		groupOne[0] = new Flusher.EventListener<Integer>() {
+		SingleFlusher.Builder<Integer> builder = new SingleFlusher.Builder<Integer>().setBufferSize(1024).setNotifySize(128).setNamePrefix("test");
+		SingleFlusher.EventListener[] groupOne = new SingleFlusher.EventListener[1];
+		groupOne[0] = new SingleFlusher.EventListener<Integer>() {
 			@Override
 			public void onException(Throwable e, long sequence, Integer event) {
 				e.printStackTrace();
@@ -32,8 +33,8 @@ public class TestFlusher {
 			}
 		};
 
-		Flusher.EventListener[] groupTwo = new Flusher.EventListener[2];
-		groupTwo[0] = new Flusher.EventListener<Integer>() {
+		SingleFlusher.EventListener[] groupTwo = new SingleFlusher.EventListener[2];
+		groupTwo[0] = new SingleFlusher.EventListener<Integer>() {
 			@Override
 			public void onException(Throwable e, long sequence, Integer event) {
 				e.printStackTrace();
@@ -46,7 +47,7 @@ public class TestFlusher {
 			}
 		};
 
-		groupTwo[1] = new Flusher.EventListener<Integer>() {
+		groupTwo[1] = new SingleFlusher.EventListener<Integer>() {
 			@Override
 			public void onException(Throwable e, long sequence, Integer event) {
 				e.printStackTrace();
@@ -60,17 +61,24 @@ public class TestFlusher {
 		};
 
 		builder.addListenerGroup(groupOne).addListenerGroup(groupTwo);
-		Flusher<Integer> flusher = builder.build();
+		SingleFlusher<Integer> flusher = builder.build();
 		final AtomicInteger test = new AtomicInteger();
-		for (int i = 0; i< 1;i++){
+		for (int i = 0; i < 1; i++) {
 			flusher.add(test.incrementAndGet());
 		}
 		check(flusher, false);
 
-
 	}
 
-	private void check(Flusher<Integer> flusher, boolean expected) throws Exception {
+	private void check(SingleFlusher<Integer> flusher, boolean expected) throws Exception {
+		Field ringBufferField = flusher.getClass().getDeclaredField("ringBuffer");
+		ringBufferField.setAccessible(true);
+		RingBuffer<Object> ringBuffer = (RingBuffer<Object>) ringBufferField.get(flusher);
+		Field resetHolderField = flusher.getClass().getDeclaredField("resetHolder");
+		resetHolderField.setAccessible(true);
+		Assert.assertEquals(expected, resetHolderField.get(flusher));
 
+		Thread.sleep(5000);
+		System.out.println(ringBuffer.get(0));
 	}
 }

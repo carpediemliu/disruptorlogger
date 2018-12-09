@@ -48,10 +48,8 @@ import com.lmax.disruptor.dsl.ProducerType;
  * @author vito.liu
  * @since 08 十二月 2018
  */
-public class Flusher<T> {
+public class SingleFlusher<T> {
 	private final Disruptor<Holder> disruptor;
-
-	private final int MAX_AVAIABLE_CAPACITY = 200;
 
 	private final List<EventListener<T>[]> listenerGroups;
 
@@ -66,7 +64,7 @@ public class Flusher<T> {
 
 	private volatile RingBuffer<Holder> ringBuffer;
 
-	private Flusher(Builder<T> builder) {
+	private SingleFlusher(Builder<T> builder) {
 		//根据自己实际情况设置线程池大小
 		//Common Thread Pool
 		ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().setNameFormat("flusher-" + builder.namePrefix + "-pool-%d").build();
@@ -161,7 +159,8 @@ public class Flusher<T> {
 		if (temp == null) {
 			return;
 		}
-		for (int i = 0; hasAvailableCapacity(temp) && i < MAX_AVAIABLE_CAPACITY; i++) {
+		int maxAvailableCapacity = 200;
+		for (int i = 0; hasAvailableCapacity(temp) && i < maxAvailableCapacity; i++) {
 			try {
 				Thread.sleep(50);
 			}
@@ -238,9 +237,9 @@ public class Flusher<T> {
 			return i;
 		}
 
-		public Flusher<T> build() {
+		public SingleFlusher<T> build() {
 			Preconditions.checkArgument(!listenerGroups.isEmpty());
-			return new Flusher<>(this);
+			return new SingleFlusher<>(this);
 		}
 	}
 
