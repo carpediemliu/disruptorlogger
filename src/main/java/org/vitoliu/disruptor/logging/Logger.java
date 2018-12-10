@@ -8,4 +8,13 @@ package org.vitoliu.disruptor.logging;
  */
 public interface Logger {
 	void write(LoggerEvent event);
+	void write(LoggerEvent event,boolean endOfBatch);
+	void  close();
+
+	/**
+	 * 日志写入器
+	 */
+	interface Filter{
+		boolean isWrite(LoggerEvent event);
+	}
 }
