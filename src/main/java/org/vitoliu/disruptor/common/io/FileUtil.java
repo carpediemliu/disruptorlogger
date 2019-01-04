@@ -115,4 +115,17 @@ public class FileUtil {
 		int lastWindowsPos = fileName.lastIndexOf(WINDOWS_SEPARATOR);
 		return Math.max(lastUnixPos, lastWindowsPos);
 	}
+
+	public static String removeExtension(String fileName) {
+		if (StringUtils.isEmpty(fileName)) {
+			return null;
+		}
+		int index = indexOfExtension(fileName);
+		if (index == -1) {
+			return fileName;
+		}
+		else {
+			return fileName.substring(0, index);
+		}
+	}
 }

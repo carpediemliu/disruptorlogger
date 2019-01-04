@@ -91,4 +91,8 @@ public class FilePattern {
 			return new DefaultFormatter(pattern);
 		}
 	}
+
+	public boolean isGunZip(){
+		return isGunZip;
+	}
 }
